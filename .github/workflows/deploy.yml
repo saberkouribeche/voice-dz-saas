@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting on merge
+name: Manual Deploy to Firebase
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - master
 
 jobs:
-  build_and_deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,11 +28,16 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
         run: npm run build
 
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Enable Web Frameworks
+        run: firebase experiments:enable webframeworks
+
+      - name: Create Service Account File
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > service-account.json
+
       - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-          channelId: live
-          projectId: qasaba-cc03c
-          entryPoint: ./
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: service-account.json
+        run: firebase deploy --project qasaba-cc03c --only hosting,firestore --non-interactive
