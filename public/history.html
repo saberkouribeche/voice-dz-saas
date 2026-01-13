@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل العمليات | Voice DZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .glass-panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+
+        .status-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+        }
+
+        .status-failed {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+        }
+    </style>
+</head>
+
+<body class="bg-[#0f172a] text-white min-h-screen flex">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#1e293b] border-l border-gray-700 hidden md:flex flex-col">
+        <div class="h-20 flex items-center px-8 border-b border-gray-700">
+            <span class="text-2xl font-bold tracking-tighter"><span class="text-orange-500">VOICE</span>213</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="dashboard.html"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fas fa-microphone-lines"></i>
+                <span>استوديو الصوت</span>
+            </a>
+            <a href="payment.html"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fas fa-wallet"></i>
+                <span>شحن الرصيد</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/10 text-orange-500 border-r-4 border-orange-500 font-bold transition">
+                <i class="fas fa-history"></i>
+                <span>سجل العمليات</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-700">
+            <button id="logout-btn"
+                class="flex items-center gap-2 text-red-400 hover:text-red-300 transition text-sm font-bold w-full px-4 py-2">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header
+            class="h-20 border-b border-gray-800 flex items-center justify-between px-6 bg-[#0f172a]/95 backdrop-blur">
+            <h2 class="text-xl font-bold">سجل العمليات</h2>
+            <div class="text-gray-400 text-sm" id="user-email-display">...</div>
+        </header>
+
+        <div class="flex-1 p-6 overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+
+                <div class="glass-panel rounded-2xl p-6 mb-8">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-receipt text-blue-500"></i> عمليات الشحن والدفع
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="bg-gray-800 text-gray-400">
+                                <tr>
+                                    <th class="p-3 rounded-tr-lg">الباقة</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3 rounded-tl-lg">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payments-table-body">
+                                <tr>
+                                    <td colspan="4" class="p-4 text-center text-gray-500">جاري التحميل...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-wave-square text-orange-500"></i> سجل توليد الأصوات
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead class="bg-gray-800 text-gray-400">
+                                <tr>
+                                    <th class="p-3 rounded-tr-lg">الصوت</th>
+                                    <th class="p-3">النص (مقتطف)</th>
+                                    <th class="p-3">التكلفة</th>
+                                    <th class="p-3">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="voice-logs-body">
+                                <tr>
+                                    <td colspan="4" class="p-4 text-center text-gray-500">جاري تحميل السجل...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { auth, db } from './js/firebase-config.js';
+        import { logoutUser } from './js/auth-service.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('user-email-display').textContent = user.email;
+                loadHistory(user.uid);
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            logoutUser().then(() => window.location.href = 'index.html');
+        });
+
+        async function loadHistory(userId) {
+            // 1. تحميل سجل المدفوعات
+            const paymentsBody = document.getElementById('payments-table-body');
+            try {
+                const q = query(collection(db, "payment_requests"), where("userId", "==", userId), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    paymentsBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">لا توجد عمليات شحن سابقة</td></tr>';
+                } else {
+                    let html = '';
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('ar-DZ') : '-';
+                        let statusClass = 'text-gray-400';
+                        let statusText = 'قيد المراجعة';
+
+                        if (data.status === 'approved') { statusClass = 'text-green-400'; statusText = 'تم الشحن ✅'; }
+                        else if (data.status === 'rejected') { statusClass = 'text-red-400'; statusText = 'مرفوض ❌'; }
+                        else { statusClass = 'text-yellow-400'; statusText = 'قيد الانتظار ⏳'; }
+
+                        html += `
+                            <tr class="border-b border-gray-700/50">
+                                <td class="p-3 font-bold text-white">${data.planName}</td>
+                                <td class="p-3 text-white">${data.amount} دج</td>
+                                <td class="p-3 text-gray-400">${date}</td>
+                                <td class="p-3 ${statusClass} font-bold text-xs">${statusText}</td>
+                            </tr>
+                        `;
+                    });
+                    paymentsBody.innerHTML = html;
+                }
+            } catch (error) {
+                console.error("Error loading payments:", error);
+                paymentsBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">خطأ في التحميل: ${error.message}</td></tr>`;
+            }
+
+            // 2. تحميل سجل التوليد
+            const logsBody = document.getElementById('voice-logs-body');
+            try {
+                const logsQuery = query(collection(db, "logs"), where("userId", "==", userId), orderBy("timestamp", "desc"));
+                const logsSnapshot = await getDocs(logsQuery);
+
+                if (logsSnapshot.empty) {
+                    logsBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">لا يوجد سجل توليد حتى الآن</td></tr>';
+                } else {
+                    let logsHtml = '';
+                    logsSnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString('ar-DZ') + ' ' + new Date(data.timestamp.seconds * 1000).toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' }) : '-';
+
+                        // أسماء الأصوات للعرض
+                        const voiceNames = {
+                            'female-dz': 'أمينة (إعلاني)',
+                            'male-dz': 'كريم (رسمي)',
+                            'yacine-dz': 'ياسين (بودكاست)',
+                            'nariman-dz': 'نريمان (حكايات)',
+                            'ryad-dz': 'رياض (تحفيزي)',
+                            'lina-dz': 'لينة (شروحات)'
+                        };
+                        const voiceDisplay = voiceNames[data.voice] || data.voice;
+
+                        logsHtml += `
+                            <tr class="border-b border-gray-700/50 hover:bg-white/5 transition">
+                                <td class="p-3 font-bold text-white">${voiceDisplay}</td>
+                                <td class="p-3 text-gray-300 text-xs truncate max-w-[200px]" title="${data.textSnippet}">${data.textSnippet || '...'}</td>
+                                <td class="p-3 text-orange-400 font-mono">${data.wordCount} نقطة</td>
+                                <td class="p-3 text-gray-500 text-xs">${date}</td>
+                            </tr>
+                        `;
+                    });
+                    logsBody.innerHTML = logsHtml;
+                }
+            } catch (error) {
+                console.error("Error loading logs:", error);
+                // التعامل مع خطأ عدم وجود الفهرس (Index)
+                if (error.code === 'failed-precondition') {
+                    logsBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-yellow-500 text-xs">ملاحظة للمطور: يجب بناء فهرس (Index) لترتيب السجلات زمنياً.<br>راجع الكونسول.</td></tr>`;
+                } else {
+                    logsBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">خطأ في التحميل</td></tr>`;
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

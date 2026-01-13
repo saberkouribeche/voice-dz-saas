@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | Voice DZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .sidebar-active {
+            background: rgba(249, 115, 22, 0.1);
+            border-right: 3px solid #f97316;
+            color: #f97316;
+        }
+
+        .glass-panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #f97316;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* تنسيق قائمة الأصوات */
+        .voice-card {
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .voice-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .voice-card.active {
+            border-color: #f97316;
+            background: rgba(249, 115, 22, 0.1);
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-[#0f172a] text-white min-h-screen flex overflow-hidden">
+
+    <!-- شاشة التحميل -->
+    <!-- شاشة التحميل -->
+    <div id="auth-loader"
+        class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="loader mb-4"></div>
+        <p class="text-gray-400 text-sm animate-pulse" id="loader-text">جاري التحقق من الحساب...</p>
+        <div id="loader-error" class="hidden mt-4 text-red-500 text-center px-4">
+            <p class="font-bold mb-2">⚠️ حدث خطأ أو استغرق التحميل وقتاً طويلاً</p>
+            <p class="text-sm text-gray-400 mb-4">تأكد من اتصال الإنترنت أو إعدادات مفاتيح API</p>
+            <button onclick="window.location.reload()"
+                class="bg-gray-800 px-4 py-2 rounded text-white text-sm hover:bg-gray-700">إعادة المحاولة</button>
+            <p id="js-error-details"
+                class="mt-4 text-xs font-mono text-red-400 bg-black/50 p-2 rounded max-w-lg mx-auto hidden"></p>
+        </div>
+    </div>
+
+    <script>
+        // Timeout handler
+        setTimeout(() => {
+            const loader = document.getElementById('auth-loader');
+            if (!loader.classList.contains('hidden')) {
+                document.querySelector('.loader').classList.add('hidden');
+                document.getElementById('loader-text').classList.add('hidden');
+                document.getElementById('loader-error').classList.remove('hidden');
+            }
+        }, 10000); // 10 seconds timeout
+
+        // Global Error Handler
+        window.onclick = null; // Reset any inline handlers
+        window.addEventListener('error', (event) => {
+            const loader = document.getElementById('auth-loader');
+            if (!loader.classList.contains('hidden')) {
+                document.querySelector('.loader').classList.add('hidden');
+                document.getElementById('loader-text').classList.add('hidden');
+                document.getElementById('loader-error').classList.remove('hidden');
+                const errBox = document.getElementById('js-error-details');
+                errBox.textContent = `Error: ${event.message} \nAt: ${event.filename}:${event.lineno}`;
+                errBox.classList.remove('hidden');
+            }
+        });
+    </script>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#1e293b] border-l border-gray-700 hidden md:flex flex-col">
+        <div class="h-20 flex items-center px-8 border-b border-gray-700">
+            <span class="text-2xl font-bold tracking-tighter"><span class="text-orange-500">VOICE</span>213</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl sidebar-active font-bold">
+                <i class="fas fa-microphone-lines"></i>
+                <span>استوديو الصوت</span>
+            </a>
+            <a href="payment.html"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fas fa-wallet"></i>
+                <span>شحن الرصيد</span>
+            </a>
+            <a href="history.html"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fas fa-history"></i>
+                <span>سجل العمليات</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-700">
+            <button id="logout-btn"
+                class="flex items-center gap-2 text-red-400 hover:text-red-300 transition text-sm font-bold w-full px-4 py-2">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content"
+        class="flex-1 flex flex-col h-screen overflow-hidden relative opacity-0 transition-opacity duration-500">
+        <!-- Top Header -->
+        <header
+            class="h-20 border-b border-gray-800 flex items-center justify-between px-6 bg-[#0f172a]/95 backdrop-blur z-20">
+            <h2 class="text-xl font-bold md:hidden"><span class="text-orange-500">VOICE</span>213</h2>
+            <div class="hidden md:block text-gray-400 text-sm" id="user-email-display">...</div>
+
+            <!-- Credit Counter -->
+            <div class="flex items-center gap-4">
+                <div class="bg-gray-800 rounded-full px-4 py-1.5 border border-gray-700 flex items-center gap-2">
+                    <span class="text-xs text-gray-400">الرصيد:</span>
+                    <span id="credit-display" class="font-bold text-orange-400 text-lg">---</span>
+                    <span class="text-xs text-gray-500">نقطة</span>
+                </div>
+                <a href="payment.html"
+                    class="bg-orange-600 hover:bg-orange-700 text-white text-xs px-3 py-2 rounded-lg font-bold transition">
+                    + شحن
+                </a>
+            </div>
+        </header>
+
+        <!-- Workspace -->
+        <div class="flex-1 overflow-hidden p-4 md:p-6">
+            <div class="max-w-7xl mx-auto h-full flex flex-col lg:flex-row gap-6">
+
+                <div class="w-full lg:w-1/3 flex flex-col gap-4 h-full">
+                    <div class="glass-panel p-4 rounded-2xl flex-1 flex flex-col overflow-hidden">
+                        <h3 class="font-bold text-gray-300 mb-4 flex items-center gap-2">
+                            <i class="fas fa-users text-orange-500"></i> اختر المعلق الصوتي
+                        </h3>
+
+                        <div id="voices-list" class="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2 pl-2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-2/3 flex flex-col gap-4 h-full overflow-y-auto pb-20">
+
+                    <div class="glass-panel rounded-2xl p-1 relative flex-1 min-h-[300px]">
+                        <textarea id="text-input"
+                            class="w-full h-full bg-[#151f32] text-white p-6 rounded-xl outline-none resize-none text-lg leading-relaxed placeholder-gray-600 font-medium"
+                            placeholder="اكتب النص هنا بالدارجة أو العربية... جرب تكتب: السلام عليكم، واش راكم؟"></textarea>
+                        <div class="absolute bottom-4 left-6 text-xs text-gray-500 bg-[#0f172a]/80 px-2 py-1 rounded-lg"
+                            id="word-count">0 كلمة</div>
+                    </div>
+
+                    <div class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center gap-4">
+                        <div class="flex-1 text-center md:text-right">
+                            <p class="text-xs text-gray-400">الصوت المختار:</p>
+                            <p class="font-bold text-orange-500 text-lg" id="selected-voice-name">أمينة (إعلاني)</p>
+                        </div>
+
+                        <div class="h-8 w-[1px] bg-gray-700 hidden md:block"></div>
+
+                        <div class="flex-1 text-center">
+                            <p class="text-xs text-gray-400">التكلفة:</p>
+                            <p class="font-bold text-white"><span id="cost-value">0</span> نقطة</p>
+                        </div>
+
+                        <button id="pre-generate-btn"
+                            class="w-full md:w-auto flex-[2] bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-3 transition transform active:scale-[0.98]">
+                            <span>✨ تحويل إلى صوت</span>
+                        </button>
+                    </div>
+
+                    <div id="result-area" class="hidden animate-fade-in-up">
+                        <div class="glass-panel p-6 rounded-xl border-t-4 border-green-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-green-400 flex items-center gap-2"><i
+                                        class="fas fa-check-circle"></i> تم الإنشاء بنجاح!</h3>
+                                <a id="download-link" href="#"
+                                    class="text-sm text-gray-400 hover:text-white flex items-center gap-1 bg-gray-800 px-3 py-1 rounded-lg transition">
+                                    <i class="fas fa-download"></i> تحميل MP3
+                                </a>
+                            </div>
+                            <audio id="audio-player" controls class="w-full custom-audio"></audio>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-[#1e293b] border border-gray-700 rounded-2xl p-6 shadow-2xl text-center">
+            <div
+                class="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500 text-2xl">
+                ⚠️
+            </div>
+            <h3 class="text-xl font-bold mb-2">تأكيد العملية</h3>
+            <p class="text-gray-400 text-sm mb-6">سيتم خصم <span id="confirm-cost" class="text-white font-bold">0</span>
+                نقطة من رصيدك. هل تريد المتابعة؟</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()"
+                    class="flex-1 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 transition">إلغاء</button>
+                <button id="generate-btn"
+                    class="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold transition flex items-center justify-center gap-2">
+                    <span>نعم، ابدأ</span>
+                    <div id="spinner"
+                        class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin hidden"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { auth, db } from './js/firebase-config.js';
+        import { logoutUser } from './js/auth-service.js'; // أعد استخدام دالة الخروج التي كتبناها سابقاً
+        import { voicesData, playVoiceSample, generateAudioFromText } from './js/voice-service.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 1. المتغيرات العامة
+        let currentVoiceId = 'female-dz';
+        let playingVoiceId = null;
+        let currentCredits = 0;
+
+        // 2. التحقق من الدخول
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('auth-loader').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('opacity-0');
+                document.getElementById('user-email-display').textContent = user.email;
+
+                // مراقبة الرصيد لحظياً
+                onSnapshot(doc(db, "users", user.uid), (doc) => {
+                    if (doc.exists()) {
+                        currentCredits = doc.data().credits || 0;
+                        document.getElementById('credit-display').textContent = currentCredits;
+                    }
+                });
+            }
+        });
+
+        // 3. رسم قائمة الأصوات
+        function renderVoices() {
+            const container = document.getElementById('voices-list');
+            container.innerHTML = '';
+
+            voicesData.forEach(voice => {
+                const isActive = voice.id === currentVoiceId;
+                const isPlaying = voice.id === playingVoiceId;
+
+                const div = document.createElement('div');
+                div.className = `voice-card p-3 rounded-xl cursor-pointer flex items-center gap-4 transition-all duration-200 ${isActive ? 'active border-orange-500 bg-orange-500/10' : 'border-transparent hover:bg-gray-800'}`;
+
+                // عند النقر على البطاقة بالكامل يتم اختيار الصوت
+                div.onclick = (e) => {
+                    // إذا لم يتم الضغط على زر التشغيل
+                    if (!e.target.closest('button')) selectVoice(voice);
+                };
+
+                div.innerHTML = `
+                <div class="w-12 h-12 rounded-full ${voice.gender === 'female' ? 'bg-pink-500/10 text-pink-500' : 'bg-blue-500/10 text-blue-500'} flex items-center justify-center text-2xl border border-gray-700">
+                    ${voice.icon}
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-center mb-1">
+                        <h4 class="font-bold text-white">${voice.name}</h4>
+                        <span class="text-[10px] ${voice.gender === 'female' ? 'bg-pink-500/20 text-pink-300' : 'bg-blue-500/20 text-blue-300'} px-2 py-0.5 rounded-full">${voice.type}</span>
+                    </div>
+                    <p class="text-xs text-gray-400">${voice.desc}</p>
+                </div>
+                <button id="btn-play-${voice.id}" class="w-10 h-10 rounded-full flex items-center justify-center transition-all ${isPlaying ? 'text-orange-500 bg-white' : 'text-gray-500 hover:text-white hover:bg-gray-700'}">
+                    <i class="fas ${isPlaying ? 'fa-stop' : 'fa-play'} text-lg"></i>
+                </button>
+            `;
+
+                // إضافة مستمع لحدث زر التشغيل برمجياً
+                const playBtn = div.querySelector(`#btn-play-${voice.id}`);
+                playBtn.onclick = (e) => handlePlayClick(e, voice.id);
+
+                container.appendChild(div);
+            });
+        }
+
+        // منطق تشغيل العينة
+        function handlePlayClick(e, voiceId) {
+            e.stopPropagation();
+
+            if (playingVoiceId === voiceId) {
+                // إيقاف
+                playingVoiceId = null;
+                renderVoices();
+                // ملاحظة: دالة playVoiceSample ستتوقف لأننا سنضيف منطق إيقاف بسيط، 
+                // لكن للتبسيط سنعيد رسم الواجهة فقط هنا
+                playVoiceSample(voiceId, () => { }, () => { }, () => { }); // إعادة تشغيل تقنية لإجبار الإيقاف (يمكن تحسينها)
+            } else {
+                // تشغيل
+                playingVoiceId = voiceId;
+                renderVoices();
+
+                playVoiceSample(
+                    voiceId,
+                    () => { }, // عند البدء
+                    () => { playingVoiceId = null; renderVoices(); }, // عند الانتهاء
+                    (err) => {
+                        console.error(err);
+                        alert("لا يمكن تشغيل العينة");
+                        playingVoiceId = null;
+                        renderVoices();
+                    }
+                );
+            }
+        }
+
+        function selectVoice(voice) {
+            currentVoiceId = voice.id;
+            renderVoices();
+            const display = document.getElementById('selected-voice-name');
+            display.textContent = `${voice.name} (${voice.type})`;
+            display.parentElement.classList.add('animate-pulse');
+            setTimeout(() => display.parentElement.classList.remove('animate-pulse'), 500);
+        }
+
+        // 4. منطق عد الكلمات
+        const textArea = document.getElementById('text-input');
+        const preGenerateBtn = document.getElementById('pre-generate-btn'); // الزر الرئيسي
+
+        textArea.addEventListener('input', () => {
+            const text = textArea.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            document.getElementById('word-count').textContent = `${words} كلمة`;
+
+            const costEl = document.getElementById('cost-value');
+            costEl.textContent = words;
+
+            if (words > currentCredits) {
+                costEl.classList.add('text-red-500');
+                preGenerateBtn.disabled = true;
+                preGenerateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                preGenerateBtn.innerHTML = '⚠️ رصيدك غير كافٍ';
+            } else {
+                costEl.classList.remove('text-red-500');
+                preGenerateBtn.disabled = false;
+                preGenerateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                preGenerateBtn.innerHTML = '<span>✨ تحويل إلى صوت</span>';
+            }
+        });
+
+        // 5. منطق التوليد مع التأكيد
+        const generateBtn = document.getElementById('generate-btn'); // زر المودال
+        const confirmModal = document.getElementById('confirm-modal');
+        // preGenerateBtn و textArea معرفين أعلاه
+
+        // فتح نافذة التأكيد
+        preGenerateBtn.addEventListener('click', () => {
+            const text = textArea.value.trim();
+            if (!text) return alert("اكتب نصاً أولاً");
+
+            const cost = text.split(/\s+/).length;
+            document.getElementById('confirm-cost').innerText = cost;
+
+            if (currentCredits < cost) {
+                alert("رصيدك غير كافٍ لهذه العملية");
+                return;
+            }
+
+            confirmModal.classList.remove('hidden');
+        });
+
+        // إغلاق النافذة
+        window.closeConfirmModal = () => confirmModal.classList.add('hidden');
+
+        // تنفيذ التوليد بعد التأكيد
+        generateBtn.addEventListener('click', async () => {
+            const text = textArea.value;
+            const spinner = document.getElementById('spinner');
+
+            generateBtn.disabled = true;
+            spinner.classList.remove('hidden');
+
+            try {
+                const audioUrl = await generateAudioFromText(text, currentVoiceId);
+
+                // عرض النتيجة
+                const player = document.getElementById('audio-player');
+                player.src = audioUrl;
+                document.getElementById('download-link').href = audioUrl;
+                document.getElementById('download-link').download = `voicedz-${Date.now()}.mp3`;
+                document.getElementById('result-area').classList.remove('hidden');
+                player.play();
+
+                // إغلاق المودال
+                closeConfirmModal();
+
+            } catch (error) {
+                console.error(error);
+                alert("حدث خطأ: " + error.message);
+                closeConfirmModal();
+            } finally {
+                generateBtn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        });
+
+        // 6. تسجيل الخروج
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            logoutUser().then(() => window.location.href = 'index.html');
+        });
+
+        // تهيئة الصفحة
+        renderVoices();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceDZ Command Center | Pro Admin</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        /* Glassmorphism Classes */
+        .glass {
+            background: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        /* Animations */
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+            }
+        }
+
+        .animate-glow {
+            animation: pulse-glow 2s infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-[#0f172a] text-white min-h-screen selection:bg-orange-500 selection:text-white">
+
+    <!-- Login Screen -->
+    <div id="login-screen"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+
+        <div class="glass p-10 rounded-2xl w-full max-w-md shadow-2xl relative z-10 border-t-4 border-orange-500">
+            <div class="text-center mb-8">
+                <div
+                    class="w-16 h-16 bg-orange-600 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-orange-500/20">
+                    <i class="fas fa-fingerprint text-3xl text-white"></i>
+                </div>
+                <h1 class="text-3xl font-black text-white tracking-tight">VoiceDZ <span
+                        class="text-orange-500">ADMIN</span></h1>
+                <p class="text-gray-400 text-sm mt-2">نظام إدارة الصوتيات الذكي V2.0</p>
+            </div>
+
+            <form id="admin-login-form" class="space-y-5">
+                <div>
+                    <label class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2 block">الوصول
+                        الآمن</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute right-4 top-4 text-gray-500"></i>
+                        <input type="email" id="admin-email"
+                            class="w-full bg-gray-900/50 border border-gray-700 rounded-xl py-3 pr-10 pl-4 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm"
+                            placeholder="admin@voicedz.com" required>
+                    </div>
+                </div>
+                <div>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute right-4 top-4 text-gray-500"></i>
+                        <input type="password" id="admin-password"
+                            class="w-full bg-gray-900/50 border border-gray-700 rounded-xl py-3 pr-10 pl-4 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition text-sm"
+                            placeholder="••••••••" required>
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-orange-900/40 relative overflow-hidden group">
+                    <span class="relative z-10 flex items-center justify-center gap-2">تسجيل الدخول <i
+                            class="fas fa-arrow-left group-hover:-translate-x-1 transition"></i></span>
+                </button>
+            </form>
+            <p id="login-error"
+                class="text-red-400 text-center text-xs mt-4 hidden bg-red-500/10 p-2 rounded border border-red-500/20">
+            </p>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="image-modal"
+        class="fixed inset-0 z-[100] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-xl"
+        onclick="this.classList.add('hidden')">
+        <img id="modal-img-content" src=""
+            class="max-h-[90vh] max-w-full rounded-lg shadow-2xl border border-gray-600 ring-4 ring-black">
+        <div
+            class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-full text-xs text-gray-300 pointer-events-none">
+            <i class="fas fa-info-circle"></i> اضغط في أي مكان للإغلاق
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <div id="dashboard-content" class="hidden pb-20">
+
+        <!-- Navbar -->
+        <nav
+            class="bg-gray-900/90 backdrop-blur-md border-b border-gray-800 px-6 py-3 flex justify-between items-center sticky top-0 z-40 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div
+                    class="bg-orange-600 w-10 h-10 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <i class="fas fa-layer-group text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white leading-tight">VoiceDZ <span
+                            class="text-orange-500">Command</span></h1>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-mono">Live System</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="refreshData()"
+                    class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition border border-gray-700">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i> تحديث
+                </button>
+                <div class="h-8 w-[1px] bg-gray-700 my-auto"></div>
+                <button onclick="logout()"
+                    class="text-red-400 hover:text-white hover:bg-red-500/20 px-3 py-2 rounded-lg transition text-xs flex items-center gap-2">
+                    <i class="fas fa-power-off"></i> خروج
+                </button>
+            </div>
+        </nav>
+
+        <div class="max-w-[1600px] mx-auto p-4 md:p-6 space-y-6">
+
+            <!-- 1. نظرة عامة (KPIs) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- إجمالي المستخدمين -->
+                <div
+                    class="glass p-5 rounded-2xl relative overflow-hidden group hover:border-blue-500/30 transition duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 bg-blue-500/10 w-28 h-28 rounded-full blur-2xl group-hover:bg-blue-500/20 transition">
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400"><i class="fas fa-users text-xl"></i>
+                        </div>
+                        <span
+                            class="text-[10px] text-gray-500 bg-gray-800 px-2 py-1 rounded border border-gray-700">الكل</span>
+                    </div>
+                    <h3 class="text-3xl font-black text-white mb-1" id="stats-users">--</h3>
+                    <p class="text-xs text-gray-400">إجمالي المستخدمين</p>
+                </div>
+
+                <!-- إجمالي التوليد -->
+                <div
+                    class="glass p-5 rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 bg-purple-500/10 w-28 h-28 rounded-full blur-2xl group-hover:bg-purple-500/20 transition">
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-2 bg-purple-500/10 rounded-lg text-purple-400"><i
+                                class="fas fa-wave-square text-xl"></i></div>
+                        <span
+                            class="text-[10px] text-green-400 bg-green-500/10 px-2 py-1 rounded border border-green-500/20">+12%</span>
+                    </div>
+                    <h3 class="text-3xl font-black text-white mb-1" id="stats-logs">--</h3>
+                    <p class="text-xs text-gray-400">عملية توليد ناجحة</p>
+                </div>
+
+                <!-- الطلبات المعلقة -->
+                <div
+                    class="glass p-5 rounded-2xl relative overflow-hidden group hover:border-orange-500/30 transition duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 bg-orange-500/10 w-28 h-28 rounded-full blur-2xl group-hover:bg-orange-500/20 transition">
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-2 bg-orange-500/10 rounded-lg text-orange-400"><i
+                                class="fas fa-receipt text-xl"></i></div>
+                        <div id="stats-pending-badge" class="hidden w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
+                    </div>
+                    <h3 class="text-3xl font-black text-white mb-1" id="stats-pending">--</h3>
+                    <p class="text-xs text-gray-400">طلبات دفع معلقة</p>
+                </div>
+
+                <!-- System Status -->
+                <div
+                    class="glass p-5 rounded-2xl relative overflow-hidden group hover:border-green-500/30 transition duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 bg-green-500/10 w-28 h-28 rounded-full blur-2xl group-hover:bg-green-500/20 transition">
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-2 bg-green-500/10 rounded-lg text-green-400"><i class="fas fa-server text-xl"></i>
+                        </div>
+                        <span
+                            class="text-[10px] text-green-400 bg-green-500/10 px-2 py-1 rounded border border-green-500/20">Stable</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-1">Gemini Pro 2.5</h3>
+                    <p class="text-[10px] text-gray-400 font-mono mt-1">Latency: 240ms</p>
+                </div>
+            </div>
+
+            <!-- 2. Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Usage Trend -->
+                <div class="glass p-6 rounded-2xl lg:col-span-2 border border-gray-700">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold flex items-center gap-2 text-sm text-gray-300"><i
+                                class="fas fa-chart-area text-blue-500"></i> وتيرة الاستهلاك (أسبوعي)</h3>
+                    </div>
+                    <div class="h-64 relative w-full">
+                        <canvas id="usageChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Voices Pie -->
+                <div class="glass p-6 rounded-2xl border border-gray-700">
+                    <h3 class="font-bold mb-6 flex items-center gap-2 text-sm text-gray-300"><i
+                            class="fas fa-chart-pie text-pink-500"></i> الأصوات المفضلة</h3>
+                    <div class="h-64 flex justify-center relative w-full">
+                        <canvas id="voicesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. إدارة المدفوعات والطلبات (New Cards) -->
+            <div class="glass rounded-2xl border border-gray-700 overflow-hidden">
+                <div
+                    class="bg-gray-800/80 p-4 border-b border-gray-700 flex justify-between items-center backdrop-blur-sm">
+                    <h2 class="font-bold flex items-center gap-2 text-orange-400">
+                        <i class="fas fa-wallet"></i> طلبات الشحن الواردة
+                    </h2>
+                    <span id="requests-badge"
+                        class="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded border border-red-500/30 hidden">0
+                        new</span>
+                </div>
+
+                <div id="requests-container"
+                    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 p-4 min-h-[150px]">
+                    <div
+                        class="col-span-full text-center py-10 flex flex-col items-center justify-center text-gray-500 gap-3">
+                        <i class="fas fa-circle-notch fa-spin text-2xl"></i>
+                        <span class="text-xs">جاري فحص الطلبات...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. المستخدمين والنشاط المباشر -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                <!-- جدول المستخدمين -->
+                <div
+                    class="glass rounded-2xl border border-gray-700 overflow-hidden xl:col-span-2 flex flex-col h-[500px]">
+                    <div class="bg-gray-800/80 p-4 border-b border-gray-700 flex justify-between items-center">
+                        <h2 class="font-bold text-sm text-gray-300"><i class="fas fa-users text-blue-400"></i> إدارة
+                            المستخدمين</h2>
+                        <div class="relative">
+                            <input type="text" id="user-search" onkeyup="filterUsers()" placeholder="بحث بالإيميل..."
+                                class="bg-gray-900 border border-gray-600 rounded-lg pl-3 pr-8 py-1.5 text-xs focus:border-blue-500 outline-none w-48 transition">
+                            <i class="fas fa-search absolute right-2.5 top-2 text-gray-500 text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-auto">
+                        <table class="w-full text-sm text-right">
+                            <thead
+                                class="bg-gray-900/50 text-gray-400 text-xs uppercase sticky top-0 backdrop-blur-sm z-10">
+                                <tr>
+                                    <th class="p-4 font-medium">المستخدم</th>
+                                    <th class="p-4 font-medium">الرصيد</th>
+                                    <th class="p-4 font-medium">تاريخ التسجيل</th>
+                                    <th class="p-4 font-medium">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-gray-700/30">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Live Feed Console -->
+                <div class="glass rounded-2xl border border-gray-700 overflow-hidden flex flex-col h-[500px]">
+                    <div class="bg-gray-900 p-4 border-b border-gray-800 flex justify-between items-center">
+                        <h2 class="font-bold text-sm text-green-400 font-mono flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Terminal Feed
+                        </h2>
+                        <span class="text-[10px] text-gray-600 font-mono">LIVE</span>
+                    </div>
+                    <div id="live-feed" class="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs bg-[#0a0f1c]">
+                        <div class="text-gray-600 text-center mt-20">Waiting for events...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Top-up Modal -->
+    <div id="topup-modal"
+        class="fixed inset-0 z-[60] bg-black/90 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glass p-6 rounded-2xl w-full max-w-sm border border-gray-700 shadow-2xl scale-95 transition-transform duration-200"
+            id="topup-content">
+            <div class="text-center mb-6">
+                <div
+                    class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3 text-green-400">
+                    <i class="fas fa-coins text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">شحن الرصيد</h3>
+                <p class="text-[10px] text-gray-400 mt-1 font-mono tracking-wider break-all text-center px-4"
+                    id="modal-user-email">user@email.com</p>
+                <input type="hidden" id="modal-user-id">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="setTopup(1000)"
+                    class="bg-gray-800 hover:bg-gray-700 hover:border-gray-500 p-3 rounded-xl text-xs border border-gray-700 transition font-bold">💎
+                    1,000</button>
+                <button onclick="setTopup(5000)"
+                    class="bg-gray-800 hover:bg-gray-700 hover:border-gray-500 p-3 rounded-xl text-xs border border-gray-700 transition font-bold">💎
+                    5,000</button>
+                <button onclick="setTopup(20000)"
+                    class="bg-gray-800 hover:bg-gray-700 hover:border-gray-500 p-3 rounded-xl text-xs border border-gray-700 transition font-bold text-blue-400">💎
+                    20,000</button>
+                <button onclick="setTopup(50000)"
+                    class="bg-gray-800 hover:bg-gray-700 hover:border-gray-500 p-3 rounded-xl text-xs border border-gray-700 transition font-bold text-yellow-500">🔥
+                    50,000</button>
+            </div>
+
+            <div class="relative mb-6">
+                <input type="number" id="custom-amount"
+                    class="w-full bg-black/40 border border-gray-600 rounded-xl p-3 text-center font-bold text-white outline-none focus:border-green-500 transition"
+                    placeholder="0">
+                <span class="absolute right-4 top-3 text-gray-500 text-xs">قيمة مخصصة</span>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeModal()"
+                    class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-xl text-sm font-bold transition border border-gray-700">إلغاء</button>
+                <button onclick="confirmTopup()"
+                    class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl text-sm font-bold transition shadow-lg shadow-green-900/30">تأكيد
+                    العملية</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, doc, updateDoc, increment, getCountFromServer, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2YVbGrW-9OAvNv__aAxlJnQNQ8OAHN0o",
+            authDomain: "qasaba-cc03c.firebaseapp.com",
+            projectId: "qasaba-cc03c",
+            storageBucket: "qasaba-cc03c.firebasestorage.app",
+            messagingSenderId: "744912812463",
+            appId: "1:744912812463:web:94ee8343989013f606575a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const ADMIN_EMAIL = 'saber@voicedz.com';
+        const PLAN_POINTS = { 'Starter': 5000, 'Pro': 20000, 'Business': 50000, 'VIP': 100000 };
+
+        // State
+        let allUsers = [];
+        let usageChart = null;
+        let voicesChart = null;
+
+        // Auth
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email === ADMIN_EMAIL) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard-content').classList.remove('hidden');
+                initDashboard();
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('dashboard-content').classList.add('hidden');
+            }
+        });
+
+        // Initialize
+        async function initDashboard() {
+            await Promise.all([
+                loadStats(),
+                loadChartsData(),
+                loadPaymentRequests(),
+                loadUsers(),
+                startLiveFeed()
+            ]);
+            console.log("Dashboard Loaded 🚀");
+        }
+
+        window.refreshData = initDashboard;
+
+        // 1. Stats
+        async function loadStats() {
+            try {
+                const u = await getCountFromServer(collection(db, "users"));
+                const l = await getCountFromServer(collection(db, "logs"));
+                document.getElementById('stats-users').textContent = u.data().count.toLocaleString();
+                document.getElementById('stats-logs').textContent = l.data().count.toLocaleString();
+            } catch (e) { console.error(e); }
+        }
+
+        // 2. Charts (Client-side aggregation for now)
+        async function loadChartsData() {
+            try {
+                // Fetch last 100 logs
+                const q = query(collection(db, "logs"), orderBy("timestamp", "desc"), limit(100));
+                const snap = await getDocs(q);
+
+                const voiceStats = {};
+                let dates = Array(7).fill(0); // Mock last 7 days buckets if we had real dates easily
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const v = d.voice || 'Other';
+                    voiceStats[v] = (voiceStats[v] || 0) + 1;
+                });
+
+                // Update Voices Chart
+                const ctxVoice = document.getElementById('voicesChart').getContext('2d');
+                if (voicesChart) voicesChart.destroy();
+
+                voicesChart = new Chart(ctxVoice, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(voiceStats),
+                        datasets: [{
+                            data: Object.values(voiceStats),
+                            backgroundColor: ['#3b82f6', '#ec4899', '#f97316', '#10b981', '#6366f1', '#8b5cf6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right', labels: { color: '#9ca3af', font: { family: 'Tajawal' } } } },
+                        cutout: '70%'
+                    }
+                });
+
+                // Mock Usage Chart (Visual only for prototype)
+                const ctxUsage = document.getElementById('usageChart').getContext('2d');
+                if (usageChart) usageChart.destroy();
+
+                usageChart = new Chart(ctxUsage, {
+                    type: 'line',
+                    data: {
+                        labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                        datasets: [{
+                            label: 'Generations',
+                            data: [12, 19, 30, 25, 42, 20, snap.size], // Mock + Real total
+                            borderColor: '#3b82f6',
+                            backgroundColor: (context) => {
+                                const ctx = context.chart.ctx;
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+                                gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+                                return gradient;
+                            },
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { color: '#1f2937' }, ticks: { color: '#6b7280' } },
+                            x: { grid: { display: false }, ticks: { color: '#6b7280' } }
+                        }
+                    }
+                });
+
+            } catch (e) { console.error("Chart Error", e); }
+        }
+
+        // 3. Payment Requests
+        window.loadPaymentRequests = async () => {
+            const container = document.getElementById('requests-container');
+            try {
+                const q = query(collection(db, "payment_requests"), where("status", "==", "pending"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    container.innerHTML = `<div class="col-span-full text-center py-8 text-gray-600 bg-black/20 rounded-xl border border-dashed border-gray-700"><div><i class="fas fa-check-circle text-2xl mb-2 text-gray-700"></i><p class="text-xs">لا توجد طلبات معلقة</p></div></div>`;
+                    document.getElementById('requests-badge').classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('requests-badge').textContent = `${snap.size} NEW`;
+                document.getElementById('requests-badge').classList.remove('hidden');
+                document.getElementById('stats-pending').textContent = snap.size;
+                document.getElementById('stats-pending-badge').classList.remove('hidden');
+
+                let html = "";
+                snap.forEach(doc => {
+                    const r = doc.data();
+                    const points = PLAN_POINTS[r.planName] || 0;
+                    const date = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleDateString('en-GB') : 'Now';
+
+                    html += `
+                    <div class="glass p-0 rounded-xl border border-gray-700 overflow-hidden flex flex-col group hover:border-orange-500/50 transition">
+                        <div class="h-32 bg-gray-800 relative cursor-pointer" onclick="viewImage('${r.receiptUrl}')">
+                            <img src="${r.receiptUrl}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-500">
+                            <div class="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-[10px] text-white backdrop-blur-sm">${r.paymentMethod}</div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col gap-2">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-bold text-orange-400">${r.planName}</h4>
+                                <span class="font-mono text-xs text-gray-500 bg-gray-800 px-1 rounded">${date}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-mono truncate cursor-help" title="${r.userEmail}">${r.userEmail}</p>
+                            <p class="text-lg font-bold text-white mb-2">${r.amount}</p>
+                            
+                            <div class="grid grid-cols-2 gap-2 mt-auto">
+                                <button onclick="rejectRequest('${doc.id}')" class="py-2 rounded-lg text-xs font-bold text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white transition">رفض</button>
+                                <button onclick="approveRequest('${doc.id}', '${r.userId}', '${r.planName}')" class="py-2 rounded-lg text-xs font-bold text-white bg-green-600 hover:bg-green-500 transition shadow-lg shadow-green-900/20">قبول (+${points / 1000}k)</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } catch (e) { console.error(e); }
+        };
+
+        // 4. Users Table
+        async function loadUsers() {
+            try {
+                const q = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(40));
+                const snap = await getDocs(q);
+                allUsers = [];
+                snap.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+                renderUsersTable(allUsers);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('users-table-body');
+            if (users.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500 text-xs">لا يوجد نتائج</td></tr>`; return; }
+
+            tbody.innerHTML = users.map(u => `
+                <tr class="hover:bg-white/5 transition group">
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+                                ${u.email.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-200">${u.email}</p>
+                                <p class="text-[10px] text-gray-600 font-mono hidden group-hover:block">${u.id}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-4 font-mono text-green-400 font-bold text-xs">${(u.credits || 0).toLocaleString()}</td>
+                    <td class="p-4 text-xs text-gray-500">${u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : '-'}</td>
+                    <td class="p-4">
+                        <button onclick="window.openTopupModal('${u.id}', '${u.email}')" class="bg-gray-800 hover:bg-blue-600 text-blue-500 hover:text-white p-2 rounded-lg transition text-xs border border-gray-700 hover:border-blue-500">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        window.filterUsers = () => {
+            const term = document.getElementById('user-search').value.toLowerCase();
+            const filtered = allUsers.filter(u => u.email.toLowerCase().includes(term));
+            renderUsersTable(filtered);
+        };
+
+        // 5. Live Feed
+        function startLiveFeed() {
+            const feed = document.getElementById('live-feed');
+            const q = query(collection(db, "logs"), orderBy("timestamp", "desc"), limit(20));
+            onSnapshot(q, (snap) => {
+                feed.innerHTML = '';
+                snap.forEach(doc => {
+                    const l = doc.data();
+                    const d = document.createElement('div');
+                    d.className = "flex gap-3 items-start border-l-2 border-gray-800 pl-3 py-1 hover:border-gray-600 transition";
+                    d.innerHTML = `
+                        <span class="text-[10px] text-gray-600 w-12 pt-1 font-mono">${new Date(l.timestamp?.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div>
+                            <p class="text-xs text-gray-300">Generated <span class="text-orange-400 font-bold">${l.wordCount} words</span> using <span class="text-blue-400">${l.voice}</span></p>
+                            <p class="text-[10px] text-gray-600 truncate w-32">${l.userId}</p>
+                        </div>
+                    `;
+                    feed.appendChild(d);
+                });
+            });
+        }
+
+        // Actions
+        window.openTopupModal = (uid, email) => {
+            document.getElementById('modal-user-id').value = uid;
+            document.getElementById('modal-user-email').textContent = email;
+            document.getElementById('topup-modal').classList.remove('hidden');
+        };
+        window.closeModal = () => document.getElementById('topup-modal').classList.add('hidden');
+        window.setTopup = (v) => document.getElementById('custom-amount').value = v;
+
+        window.confirmTopup = async () => {
+            const uid = document.getElementById('modal-user-id').value;
+            let val = document.getElementById('custom-amount').value;
+            if (!val) return alert("حدد القيمة");
+            await updateDoc(doc(db, "users", uid), { credits: increment(parseInt(val)) });
+            alert("تم الشحن 💎");
+            closeModal();
+            loadUsers();
+        };
+
+        window.approveRequest = async (docId, uid, plan) => {
+            const pts = PLAN_POINTS[plan] || 0;
+            if (!confirm("تفعيل الحساب؟")) return;
+            await updateDoc(doc(db, "payment_requests", docId), { status: 'approved' });
+            await updateDoc(doc(db, "users", uid), { credits: increment(pts) });
+            alert("تمت العملية بنجاح 🎉");
+            refreshData();
+        };
+
+        window.rejectRequest = async (docId) => {
+            if (!confirm("رفض؟")) return;
+            await updateDoc(doc(db, "payment_requests", docId), { status: 'rejected' });
+            refreshData();
+        };
+
+        // Login (Same)
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            try { await signInWithEmailAndPassword(auth, email, password); }
+            catch { document.getElementById('login-error').textContent = "خطأ في الدخول"; document.getElementById('login-error').classList.remove('hidden'); }
+        });
+        window.logout = () => signOut(auth);
+        window.viewImage = (url) => { document.getElementById('modal-img-content').src = url; document.getElementById('image-modal').classList.remove('hidden'); };
+
+    </script>
+</body>
+
+</html>
