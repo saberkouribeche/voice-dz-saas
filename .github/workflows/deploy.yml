@@ -40,4 +40,4 @@ jobs:
       - name: Deploy to Firebase
         env:
           GOOGLE_APPLICATION_CREDENTIALS: service-account.json
-        run: firebase deploy --project qasaba-cc03c --only hosting,firestore --non-interactive
+        run: firebase deploy --project qasaba-cc03c --non-interactive --debug
