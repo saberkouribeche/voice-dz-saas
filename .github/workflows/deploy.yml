@@ -17,22 +17,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies
-        working-directory: ./voice-dz-next
-        run: npm ci
-
-      - name: Build Next.js App
-        working-directory: ./voice-dz-next
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-        run: npm run build
-
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
-
-      - name: Enable Web Frameworks
-        run: firebase experiments:enable webframeworks
 
       - name: Create Service Account File
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > service-account.json
@@ -40,4 +26,6 @@ jobs:
       - name: Deploy to Firebase
         env:
           GOOGLE_APPLICATION_CREDENTIALS: service-account.json
-        run: firebase deploy --project qasaba-cc03c --non-interactive --debug
+        run: |
+          firebase experiments:enable webframeworks
+          firebase deploy --project qasaba-cc03c --non-interactive --debug
